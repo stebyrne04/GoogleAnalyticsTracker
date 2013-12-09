@@ -11,21 +11,23 @@ namespace GoogleAnalyticsTracking
     public class Tracker
     {
         BackgroundWorker mainBackgroundWorker = new BackgroundWorker();
-        private string _urlData;
-        private string _googleAnalyticsVersion = "v=1";
-        private string _gameVersion = "1";
-        private string _trackingID;
-        private string _gameName;
-        private string _ucid;
-        private string _url = "http://www.google-analytics.com/collect";
+        private string _urlData; // payload_data holder
+        private string _googleAnalyticsVersion = "v=1"; // Version.
+        private string _gameVersion = "1"; // App version.
+        private string _trackingID;  // Tracking ID / Web property / Property ID.
+        private string _gameName; // App name.
+        private string _ucid = "555"; // 555 Anonymous Client ID.
+        private string _url = "http://www.google-analytics.com/collect";  // url POST to 
         bool isFinished = true;
         public int _ProcessPercentage;
+        uuid getuuid;
+
 
         private static Tracker instance = null;
 
         public static Tracker Instance()
         {
-           return Tracker.instance;
+            return Tracker.instance;
         }
 
         /// <summary>
@@ -34,17 +36,18 @@ namespace GoogleAnalyticsTracking
         /// <param name="googleID">Need google's Tracking ID eg:UA-XXXX-Y  </param>
         /// <param name="appName">Set app name</param>
         /// <param name="gameVersion">Set Game Version Number. Use null to set Game Version to 1</param>
-        public Tracker(string googleID,string appName, Nullable<string> gameVersion) {
-            if (instance.Equals(null))
+        public Tracker(string googleID, string appName, string gameVersion)
+        {
+
+            this._trackingID = googleID;
+            this._gameName = appName;
+            if (gameVersion != null)
             {
-                this._trackingID = googleID;
-                this._gameName = appName;
-                if (gameVersion != null)
-                {
-                    this._gameVersion = "" + gameVersion;
-                }
-                instance = this;
+                this._gameVersion = "" + gameVersion;
             }
+            instance = this;
+            getuuid = new uuid();  
+            this._ucid = uuid.Uuid;
         }
 
         /// <summary>
@@ -54,25 +57,28 @@ namespace GoogleAnalyticsTracking
         /// <param name="action">Specifies the event action. Must not be empty. ( ea=Action )</param>
         /// <param name="label">Specifies the event label. It can be null</param>
         /// <param name="value">Specifies the event value. Values must be non-negative. It can be null</param>
-        public void TrackObject(string category, string action, Nullable<string> label, Nullable<int> value)
+        public void TrackObject(string category, string action, string label, Nullable<int> value)
         {
             string urlParams;
             urlParams = _googleAnalyticsVersion;
             urlParams += "&tid=" + _trackingID;
             urlParams += "&cid=" + _ucid;
             urlParams += "&an=" + _gameName;
+            urlParams += "&av=" + _gameVersion;
             urlParams += "&t=event";
             urlParams += "&ec=" + category;
             urlParams += "&ea=" + action;
-            if (label != null) {
+            if (label != null)
+            {
                 urlParams += "&el=" + label;
             }
-            if (value != null){
+            if (value != null)
+            {
                 urlParams += "&ev=" + (int)value;
             }
             SendFrom(urlParams);
         }
-        
+
         /// <summary>
         /// Mobile App / Screen Tracking
         /// </summary>
@@ -84,6 +90,7 @@ namespace GoogleAnalyticsTracking
             urlParams += "&tid=" + _trackingID;
             urlParams += "&cid=" + _ucid;
             urlParams += "&an=" + _gameName;
+            urlParams += "&av=" + _gameVersion;
             urlParams += "&t=appview";
             urlParams += "&cd=" + screen;
             SendFrom(urlParams);
@@ -102,6 +109,7 @@ namespace GoogleAnalyticsTracking
             urlParams += "&tid=" + _trackingID;
             urlParams += "&cid=" + _ucid;
             urlParams += "&an=" + _gameName;
+            urlParams += "&av=" + _gameVersion;
             urlParams += "&t=exception";
             urlParams += "&exd=" + exceptionDescription;
             if (fatal) { urlParams += "&exf=1"; }
@@ -125,6 +133,7 @@ namespace GoogleAnalyticsTracking
             urlParams += "&tid=" + _trackingID;
             urlParams += "&cid=" + _ucid;
             urlParams += "&an=" + _gameName;
+            urlParams += "&av=" + _gameVersion;
             urlParams += "&t=social";
             urlParams += "&sn=" + network;
             urlParams += "&sa=" + action;
@@ -148,6 +157,7 @@ namespace GoogleAnalyticsTracking
             urlParams += "&tid=" + _trackingID;
             urlParams += "&cid=" + _ucid;
             urlParams += "&an=" + _gameName;
+            urlParams += "&av=" + _gameVersion;
             urlParams += "&t=item";
             urlParams += "&ti=" + transactionID;
             urlParams += "&in=" + itemName;
@@ -174,6 +184,7 @@ namespace GoogleAnalyticsTracking
             urlParams += "&tid=" + _trackingID;
             urlParams += "&cid=" + _ucid;
             urlParams += "&an=" + _gameName;
+            urlParams += "&av=" + _gameVersion;
             urlParams += "&t=item";
             urlParams += "&ti=" + transactionID;
             urlParams += "&ta=" + transactionAffiliation;
@@ -184,17 +195,19 @@ namespace GoogleAnalyticsTracking
             SendFrom(urlParams);
         }
 
-        void SendFrom(string urlParams) {
-            if (!mainBackgroundWorker.IsBusy)
+        void SendFrom(string urlParams)
+        {
+            BackgroundWorker backgroundWorker = new BackgroundWorker();
+            if (!backgroundWorker.IsBusy)
             {
                 isFinished = false;
                 this._urlData = urlParams;
-                mainBackgroundWorker.DoWork += new DoWorkEventHandler(SentData);
-                mainBackgroundWorker.ProgressChanged += DoProgressChanged;
-                mainBackgroundWorker.RunWorkerCompleted += WorkerCompleted;
-                mainBackgroundWorker.RunWorkerAsync();
-                mainBackgroundWorker.WorkerReportsProgress = true;
-                mainBackgroundWorker.WorkerSupportsCancellation = true;
+                backgroundWorker.DoWork += new DoWorkEventHandler(SentData);
+                backgroundWorker.ProgressChanged += DoProgressChanged;
+                backgroundWorker.RunWorkerCompleted += WorkerCompleted;
+                backgroundWorker.RunWorkerAsync();
+                backgroundWorker.WorkerReportsProgress = true;
+                backgroundWorker.WorkerSupportsCancellation = true;
             }
         }
 
@@ -205,11 +218,11 @@ namespace GoogleAnalyticsTracking
                 BackgroundWorker worker = sender as BackgroundWorker;
                 try
                 {
-                    
+
                     System.Threading.Thread.Sleep(50);
                     worker.ReportProgress(20);
 
-                    string address = _url;
+                    string address = _url + "?" + this._urlData;
                     HttpWebRequest request = (HttpWebRequest)WebRequest.Create(_url);
                     request.KeepAlive = true;
                     request.ProtocolVersion = HttpVersion.Version11;
@@ -244,11 +257,13 @@ namespace GoogleAnalyticsTracking
                     System.Threading.Thread.Sleep(50);
                     worker.ReportProgress(100);
                 }
-                catch {
+                catch
+                {
                     worker.ReportProgress(100);
                 }
             }
-            else { 
+            else
+            {
                 //need to store data 
             }
         }
