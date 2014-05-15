@@ -56,7 +56,7 @@ namespace GoogleAnalyticsTracking
             string cpuID = GetCPUID();
             string macAddress = GetMACAddress();
 
-            return macAddress.Substring(0, 4) + "-" + cpuID.Substring(4, 4) + "-" + macAddress.Substring(8) + "-" + cpuID.Substring(1, 4) + "-" + volumeSerial + "-" + macAddress.Substring(4, 4);
+            return macAddress.Substring(0, 4) + "" + cpuID.Substring(4, 4) + "-" + macAddress.Substring(8) + "-" + cpuID.Substring(1, 4)+ "-5043-" + volumeSerial + "" + macAddress.Substring(4, 4);
 
         }
 

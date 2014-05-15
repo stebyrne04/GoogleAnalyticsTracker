@@ -98,6 +98,35 @@ namespace GoogleAnalyticsTracking
         }
 
         /// <summary>
+        /// Session Duration
+        /// </summary>
+        /// <param name="screen">Specifies the Screen Name of the game hit</param>
+        /// <param name="sessionControl">Used to control the session duration. 1 == start, 0 == end.</param>
+        public void TrackObject(string screen , int sessionControl)
+        {
+            string urlParams;
+            urlParams = _googleAnalyticsVersion;
+            urlParams += "&tid=" + _trackingID;
+            urlParams += "&cid=" + _ucid;
+            urlParams += "&an=" + _gameName;
+            urlParams += "&av=" + _gameVersion;
+            urlParams += "&t=appview";
+            urlParams += "&cd=" + screen;
+            if (sessionControl.Equals(0))
+            {
+                urlParams += "&sc=end";
+                SendFrom(urlParams);
+            }
+            else if (sessionControl.Equals(1))
+            {
+                urlParams += "&sc=start";
+                SendFrom(urlParams);
+            }
+            else { }
+
+        }
+
+        /// <summary>
         /// Track exceptions
         /// </summary>
         /// <param name="exceptionDescription">Description of error</param>
